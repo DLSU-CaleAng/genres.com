@@ -95,7 +95,8 @@ const PRODUCTS = [
     artOpacity: 0.25, artTint: '#f7e7d6',
     songs: ['Dreamer', 'Second Best', 'Haunted', 'Must Be Love', 'While You Were Sleeping', 'Lovesick', 'California and Me', 'Nocturne (Interlude)', 'Promise', 'From The Start', 'Misty', 'Serendipity', 'Letter To My 13 Year Old Self', 'Bewitched'],             // add or remove titles freely
     featuredAudio: 'assets/audio/thestart.mp3',           // '' = silence for this album
-    foregroundGif: 'assets/fg/bewitched.png'              // optional but looks nice hehe; '' = no overlay
+    foregroundGif: 'assets/fg/bewitched.png',              // optional but looks nice hehe; '' = no overlay
+    foregroundGifMobile: 'assets/fg/bewitchedphone.png',
   },
   {
     id: 'album-two',
@@ -110,7 +111,8 @@ const PRODUCTS = [
     artOpacity: 0.25, artTint: '#d99cdf',
     songs: ["Take a Bite", "California", "One Time", "Real Man", "Tie My Shoes", "Girl Song", "Coming Home", "Ever Seen", "A Cruel Affair", "Post", "Beaches", "Everything I Want", "The Man Who Left Too Soon", "This Is How It Went"],
     featuredAudio: 'assets/audio/abite.mp3',
-    foregroundGif: ''
+    foregroundGif: 'assets/fg/tomorrow.png',
+    foregroundGifMobile: 'assets/fg/tomorrowphone.png',
   },
   {
     id: 'album-three',
@@ -125,7 +127,8 @@ const PRODUCTS = [
     artOpacity: 0.30, artTint: '#d3c6a2',
     songs: ["10/10", "Always", "Laser Lights", "Face to Face", "Stressed Out", "Never Had the Balls", "Pluto Projector", "Every Way", "It Gets Better", "It's Not the Same Anymore"],
     featuredAudio: 'assets/audio/shade.mp3',
-    foregroundGif: ''
+    foregroundGif: 'assets/fg/dalmat.png',
+    foregroundGifMobile: 'assets/fg/dalmatphone.png',
   },
     {
     id: 'album-four',
@@ -140,7 +143,8 @@ const PRODUCTS = [
     artOpacity: 0.25, artTint: '#283256',
     songs: ["Ocho Rios", "Valentina", "Toronto 2014", "Let Me Go", "Do You Like Me?", "Always", "Cool", "Disillusioned", "Buyer's Remorse", "Shot My Baby", "Pain Is Inevitable", "Homiesexual", "Vince Van Gogh", "Superpowers", "Unstoppable"],
     featuredAudio: 'assets/audio/superpower.mp3',
-    foregroundGif: 'assets/fg/superpowers.png'
+    foregroundGif: 'assets/fg/superpowers.png',
+    foregroundGifMobile: 'assets/fg/superpowersphone.png',
   },
   {
     id: 'album-five',
@@ -155,12 +159,14 @@ const PRODUCTS = [
     artOpacity: 0.25, artTint: '#f4efe6',
     songs: ['you seem pretty sad for a girl so in love', 'The Life Of A Showgirl', 'I’m The Problem', 'Dandelion', 'The Great Divide', 'HABIBTI', 'The Art Of Loving', 'Stick Season', 'Palace For The People', 'ICEMAN'],             // add or remove titles freely
     featuredAudio: 'assets/what-i-like.mp3',           // '' = silence for this album
-    foregroundGif: ''              // optional but looks nice hehe; '' = no overlay
+    foregroundGif: '',              // optional but looks nice hehe; '' = no overlay
+    foregroundGifMobile: 'assets/fg/bewitched-phone.png',
   },
 ]; //femboy
 
 // Products inherit these defaults for anything they do not define. theme {} = use the default theme.
 const PRODUCT_DEFAULTS = {
+  foregroundGifMobile: '',
   artScale: 1,
   price: 35,
   font: "'Inter', system-ui, sans-serif", squareBackground: '#ddd', theme: {}, image: '', animation: '',
@@ -400,6 +406,12 @@ function showForeground(src) {
   setMask(el, { position: dir.shown });
 }
 
+const PHONE_QUERY = '(max-width: 800px)';
+function pickForegroundGif(product) {
+  if (!product) return '';
+  return (window.matchMedia(PHONE_QUERY).matches && product.foregroundGifMobile) || product.foregroundGif;
+}
+
 // The one place that reacts to "a different album is now active". [#######################3]
 let activeId = null;
 function setActiveProduct(product) {
@@ -408,7 +420,7 @@ function setActiveProduct(product) {
   activeId = id;
   document.querySelectorAll('.product').forEach((el) => el.classList.toggle('is-active', el.dataset.id === id));
   if (CONFIG.features.albumThemes) { applyTheme(product && product.theme); setBackgroundArt(product); }
-  if (CONFIG.features.foregroundGifs) showForeground(product && product.foregroundGif);
+  if (CONFIG.features.foregroundGifs) showForeground(pickForegroundGif(product));
   if (product) {
     Music.request(product.featuredAudio);
     console.log("works")
@@ -959,6 +971,11 @@ function start() {
   $('#brand-icon').src = CONFIG.brand.iconSrc;
   $('#order-form').src = CONFIG.orderFormUrl;
   $('#order-form-link').href = CONFIG.orderFormUrl.replace('?embedded=true', '');
+
+  window.matchMedia(PHONE_QUERY).addEventListener('change', () => {
+    const product = PRODUCTS.find((p) => p.id === activeId);
+    if (product && CONFIG.features.foregroundGifs) showForeground(pickForegroundGif(product));
+  });
 
   renderProducts();
   renderPrices();
