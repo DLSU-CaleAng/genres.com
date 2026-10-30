@@ -162,7 +162,7 @@ const PRODUCTS = [
 // Products inherit these defaults for anything they do not define. theme {} = use the default theme.
 const PRODUCT_DEFAULTS = {
   artScale: 1,
-  price: 45,
+  price: 35,
   font: "'Inter', system-ui, sans-serif", squareBackground: '#ddd', theme: {}, image: '', animation: '',
   artRatio: '3 / 2', reels: { src: '', leftX: 0.3, rightX: 0.7, y: 0.42, size: 0.2 }, // see CONFIG.images
   artOpacity: 0.3, artTint: 'transparent', songs: [], featuredAudio: '', foregroundGif: ''
