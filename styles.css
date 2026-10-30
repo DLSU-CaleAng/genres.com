@@ -1,8 +1,6 @@
-/* Genres — styles.css
-   Sections: 1 Design tokens · 2 Base · 3 Header · 4 Intro · 5 Fixed layers · 6 Home
-             7 Products · 8 Order + footers · 9 Mini player · 10 Responsive/motion */
+/* bunch of bs, reading through this is hell*/
 
-/* ===== 1. DESIGN TOKENS (EDIT HERE: default theme) ===== */
+/* DEISGN FEATURES */
 :root {
   --bg: #f4efe6;        /* page background  */
   --text: #111111;      /* page text        */
@@ -13,14 +11,13 @@
   --radius: 14px;
   --shadow: 0 20px 50px rgba(0, 0, 0, .25);
   --theme-ms: 800ms;    /* how long theme colors take to change */
-  /* SCALING MODEL: reference ratio of the hero "stage" (width : height). Portrait screens switch to 4 : 5 at the bottom of this file. */
+  /* reference ratio of the hero "stage" (width : height). Portrait screens switch to 4 : 5 at the bottom of this file. */
   --stage-w: 16; --stage-h: 9;
   /* layering rules */
   --z-bg: 0; --z-notes: 1; --z-content: 2; --z-foreground: 50;
   --z-header: 60; --z-player: 70; --z-intro: 100;
 }
 
-/* ===== 2. BASE ===== */
 * { box-sizing: border-box; }
 /* OVERFLOW RULES: nothing may widen the page. "clip" hides sideways overflow without breaking fixed layers. */
 html, body { overflow-x: clip; }
@@ -35,7 +32,7 @@ a { color: inherit; }
 button { font: inherit; cursor: pointer; }
 main { position: relative; z-index: var(--z-content); }
 
-/* A simple cassette drawn with CSS, used as a placeholder everywhere */
+/* A simple cassette drawn with CSS, used as a placeholder everywhere, HAHAHHAHAHAHHAHA, our mascot */
 .cassette {
   position: relative; width: 100%; aspect-ratio: 3 / 2; border: 4px solid #111;
   border-radius: 12px; background: var(--accent); color: #111;
@@ -46,7 +43,7 @@ main { position: relative; z-index: var(--z-content); }
 }
 .cassette::before { left: 12%; } .cassette::after { right: 12%; }
 
-/* ===== 3. HEADER ===== */
+/* ----------------- Header or the Navigation ---------- */
 #site-header {
   position: fixed; inset: 0 0 auto 0; z-index: var(--z-header);
   display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;
@@ -60,20 +57,22 @@ nav { display: flex; gap: 1.25rem; }
 nav a { text-decoration: none; padding: .25rem 0; border-bottom: 2px solid transparent; }
 nav a:hover, nav a[aria-current="page"] { border-color: var(--accent); }
 
-/* ===== 4. INTRO ===== */
+/* ---------------------- INTRO SEQUENCE ------------------------------- */
 #intro { position: fixed; inset: 0; z-index: var(--z-intro); background: #000; color: #fff;
   display: grid; place-items: center; text-align: center; }
 #intro[hidden] { display: none; }
 .intro-step { grid-area: 1 / 1; margin: 0; opacity: 0; transition: opacity .6s; font-size: 1.25rem; }
 #intro-logo { font-family: var(--font-display); font-size: clamp(2.5rem, 12vw, 7rem); }
 .intro-step.is-visible { opacity: 1; }
-#intro-video { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .6s; }
+/* Ratio setting for the uh video. */
+#intro-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: var(--intro-video-fit, contain); opacity: 0; transition: opacity .6s; }
 #intro-video.is-visible { opacity: 1; }
 #intro-skip { position: absolute; right: 1.5rem; bottom: 1.5rem; padding: .5rem 1rem;
   background: transparent; color: #fff; border: 1px solid #fff; border-radius: 999px; }
 
-/* ===== 5. FIXED LAYERS ===== */
-#bg { position: fixed; inset: 0; z-index: var(--z-bg); overflow: hidden; pointer-events: none; background: var(--bg); transition: background-color var(--theme-ms); }
+
+/* layer-section */
+  #bg { position: fixed; inset: 0; z-index: var(--z-bg); overflow: hidden; pointer-events: none; background: var(--bg); transition: background-color var(--theme-ms); }
 #bg-art { position: absolute; inset: 0; background-size: contain; background-repeat: no-repeat; background-position: center; /* contain = never stretched; spare space shows the theme */
   background-blend-mode: multiply; opacity: 0; transition: opacity var(--theme-ms); }
 .bg-word { position: absolute; top: 50%; width: 100%; text-align: center; transform: translateY(-50%);
@@ -81,7 +80,7 @@ nav a:hover, nav a[aria-current="page"] { border-color: var(--accent); }
 .bg-cassette { position: absolute; right: 6%; bottom: 8%; width: 18vw; opacity: .35; transform: rotate(-12deg); }
 
 #foreground-gif { position: fixed; inset: 0; z-index: var(--z-foreground); pointer-events: none; /* never blocks clicks */
-  background-size: contain; background-repeat: no-repeat; background-position: center; clip-path: inset(0 100% 0 0); }
+  background-size: cover; background-repeat: no-repeat; background-position: center; clip-path: inset(0 100% 0 0); }
 
 .notes-layer { position: fixed; inset: 0; z-index: var(--z-notes); pointer-events: none; display: none;
   color: var(--accent); overflow: hidden; }
@@ -90,10 +89,7 @@ body[data-page="products"] .notes-layer { display: block; }
   background: repeating-linear-gradient(to bottom, currentColor 0 1px, transparent 1px 12px); }
 .note { position: absolute; font-size: clamp(1.5rem, 4vw, 2.5rem); opacity: .3; will-change: transform; }
 
-/* ===== 6. HOME ===== */
-/* SCALING MODEL: the hero is a "stage" with a reference ratio (--stage-w : --stage-h). It fits inside the screen like a
-   picture in a frame, and everything inside is sized in cqw (1% of the stage width), so the whole composition
-   scales together and is never stretched. Leftover screen space shows var(--bg). */
+/* Home (hero acts as the stage for the like a box for the resizing) */
 .hero { position: relative; display: grid; place-items: center; min-height: 100svh; overflow: hidden; background: var(--bg); }
 .hero-stage { position: relative; container-type: inline-size;
   width: min(100%, calc(100svh * var(--stage-w) / var(--stage-h))); aspect-ratio: var(--stage-w) / var(--stage-h); }
@@ -105,7 +101,7 @@ body[data-page="products"] .notes-layer { display: block; }
 .mark { position: absolute; top: 50%; font-size: 3cqw; }
 .mark-left { left: 3%; } .mark-right { right: 3%; }
 .hero-cassette { display: grid; place-items: center; }
-.cassette-wrap { position: relative; width: 36cqw; pointer-events: auto; touch-action: pan-y; /* pan-y keeps vertical page scrolling on touch */
+.cassette-wrap { position: relative; width: 36cqw; pointer-events: auto; touch-action: none; /* was pan-y; none stops the page scrolling while the cassette is dragged */
   user-select: none; -webkit-user-drag: none; }
 .cassette-wrap.is-draggable { cursor: grab; }
 .cassette-wrap.is-draggable:active { cursor: grabbing; }
@@ -128,13 +124,15 @@ body[data-page="products"] .notes-layer { display: block; }
 .origin-figure { aspect-ratio: 4 / 3; background: var(--accent-2); border-radius: var(--radius); overflow: hidden; }
 .origin-figure img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ===== 7. PRODUCTS ===== */
+/* products area  */
 #product-list { padding: 8rem 0 4rem; }
 .product {
   position: relative; width: min(1000px, 90%); margin: 0 auto 18vh; padding: clamp(1.5rem, 4vw, 2.5rem);
-  /* minmax(0, 1fr) lets columns shrink. The old marquee overflow came from the default minimum column size. */
+  /* minmax(0, 1fr) lets columns shrink. The old marquee overflow came from the default minimum column size oops. */
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); align-items: center;
-  --frame-break: 8%; /* how far the cassette may poke out of its square (stays inside the card padding) */
+  --frame-break: 8%;               /* how far the animation may poke out of its square on EACH side (per product: artBreak) */
+  --art-eff: var(--art-scale, 1);  /* per-product enlargement, from artScale */
+  --art-max-vh: 108svh;             /* the animation never ends up taller than this share of the screen, so it fits short screens such as iPads */
   background: var(--surface, #fff); color: var(--surface-text, #111); /* each module has its own surface */
   border-radius: var(--radius); box-shadow: var(--shadow);
   font-family: var(--product-font, var(--font-body)); /* no overflow:hidden here, or the frame-break would be clipped */
@@ -142,29 +140,37 @@ body[data-page="products"] .notes-layer { display: block; }
 .product.reverse .product-visual { order: 2; }
 .product-info { min-width: 0; }
 .product-visual { position: relative; aspect-ratio: 1; background: var(--square-bg, #ddd); border-radius: var(--radius); }
-.product-art { position: absolute; inset: calc(var(--frame-break) * -1); display: grid; place-items: center; transition: transform .4s ease; }
+/* the animation box: the square PLUS the frame-break margin on every side, scaled up by artScale from its centre.
+   The picture is fitted inside it with object-fit: contain, so a tall keychain is limited by height and a wide cassette by width:
+   the browser reads the image's own ratio, nothing is stretched and no artRatio is needed. It still pokes out of the square. */
+.product-art { position: absolute; left: 50%; top: 50%; display: grid; place-items: center;
+  width: calc(100% + 2 * var(--frame-break));
+  height: min(calc(100% + 2 * var(--frame-break)), calc(var(--art-max-vh) / var(--art-eff, 1)));
+  transform: translate(-50%, -50%) scale(var(--art-eff, 1)); transition: transform .4s ease; }
+.product-art .art-frame { width: 100%; height: 100%; aspect-ratio: auto; max-height: none; }
+.product-art .art-frame .cassette { inset: 50% auto auto 0; height: auto; aspect-ratio: 3 / 2; transform: translateY(-50%); } /* placeholder keeps its 3 : 2 shape */
 .art-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-body.hover-on .product-visual:hover .product-art { transform: scale(1.08); }
 .product-artist { margin: 0; opacity: .7; }
 .product-title { margin: .25rem 0 1rem; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1; overflow-wrap: anywhere; }
+body.hover-on .product-visual.is-hovered .product-art { transform: translate(-50%, -50%) scale(calc(var(--art-eff, 1) * 1.08)); } /* .is-hovered is added by script.js for mouse and pen only, so a finger tap can never leave it stuck */
 
 /* MARQUEE: this box is its OWN clipping viewport; script.js sizes the text and speed to its width. */
 .marquee { container-type: inline-size; max-width: 100%; overflow: hidden; margin-top: 1.5rem; border-block: 2px solid currentColor; }
 .marquee-track { display: flex; width: max-content; margin: 0; padding: .5em 0; list-style: none;
   animation: marquee var(--marquee-seconds, 20s) linear infinite; }
 .marquee-track li { padding-right: 2em; white-space: nowrap; font-weight: 600;
-  max-width: 80cqw; overflow: hidden; text-overflow: ellipsis; } /* a very long title is shortened with … */
+  max-width: 80cqw; overflow: hidden; text-overflow: ellipsis; } /* a very long title is shortened with … or elipse, eccplise? elipses, idk*/
 .marquee:hover .marquee-track, .marquee:focus .marquee-track { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } } /* two identical halves = seamless loop */
 
-/* ===== 8. ORDER + FOOTERS ===== */
+/* -footers-                                      feet???? */
 .order-wrap { max-width: 720px; margin: 0 auto; padding: 7rem 1rem 3rem; }
 .form-frame { width: 100%; background: #fff; border-radius: var(--radius); overflow: hidden; }
 .form-frame iframe { display: block; width: 100%; height: 900px; border: 0; }
 .site-footer { padding: 3rem 1.5rem 6rem; background: var(--text); color: var(--bg); }
 .site-footer.small { padding-block: 1.5rem 5rem; }
 
-/* ===== 9. MINI PLAYER ===== */
+/* Mini cassette */
 #mini-player { position: fixed; left: 1rem; bottom: 1rem; z-index: var(--z-player); width: clamp(110px, 22vw, 150px); padding: .6rem;
   background: var(--bg); color: var(--text); border: 2px solid currentColor; border-radius: var(--radius); box-shadow: var(--shadow); }
 .mini-cassette { border-width: 2px; }
@@ -176,7 +182,7 @@ body.hover-on .product-visual:hover .product-art { transform: scale(1.08); }
 #progress-fill { display: block; height: 100%; width: 0; background: var(--accent); }
 #progress-text { font-size: .8rem; }
 
-/* ===== 10. RESPONSIVE + REDUCED MOTION ===== */
+/* cool scroll motion for uh non-vomiting reasons */
 @media (max-width: 800px) {
   .product { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
   .product.reverse .product-visual { order: 0; }
@@ -192,20 +198,20 @@ body.hover-on .product-visual:hover .product-art { transform: scale(1.08); }
 @media (max-aspect-ratio: 1/1) { :root { --stage-w: 4; --stage-h: 5; } }
 @media (max-width: 480px) { nav a { font-size: .8rem; } .origin { grid-template-columns: minmax(0, 1fr); } }
 
-/* ===== ADDENDUM: intro icon, cassette art + reels, shadow, cursor, visualizer, dividers ===== */
+/* ===== ADDENDUM: intro icon, cassette art + reels, shadow, cursor, visualizer, dividers ===== mhm what he said thanks Claude, had this bug for like an hour*/
 #intro-notice { display: flex; flex-direction: column; align-items: center; gap: var(--intro-gap, 1rem); }
 #intro-notice svg { width: var(--intro-icon-size, clamp(64px, 12vw, 88px)); aspect-ratio: 1; }
 #intro-notice p { margin: 0; }
 #intro-notice path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.1s ease .15s; } /* stroke-drawing entrance */
 #intro-notice.is-visible path { stroke-dashoffset: 0; }
 
-/* One "art frame" is used for products, the hero and the mini player. Its ratio comes from the image config. */
+/* one "art frame" is used for products, the hero and the mini player, its ratio comes from the image config. */
 .art-frame { position: relative; width: 100%; aspect-ratio: var(--art-ratio, 3 / 2); max-height: 100%; }
 .art-frame .cassette { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; }
 .placeholder-label { position: absolute; left: 0; right: 0; bottom: 6%; text-align: center; font: 600 .6rem var(--font-body); letter-spacing: .1em; }
 .mini-art .placeholder-label { display: none; }
 .mini-art { width: 100%; }
-/* Reels turn with SCROLL: script.js sets --reel-angle. Placeholder reels and optional reel overlays both use it. */
+/* Reels turn with scroll: script.js sets --reel-angle, and the uh placeholder reels and optional reel overlays both use it. */
 .cassette::before, .cassette::after { transform: rotate(var(--reel-angle, 0deg)); }
 .reel { position: absolute; aspect-ratio: 1; background: center / contain no-repeat; pointer-events: none;
   transform: translate(-50%, -50%) rotate(var(--reel-angle, 0deg)); }
@@ -215,7 +221,7 @@ body.hover-on .product-visual:hover .product-art { transform: scale(1.08); }
   margin: calc(var(--shadow-h, 4.5cqw) / -2) 0 0 calc(var(--shadow-w, 30cqw) / -2); border-radius: 50%; background: #000;
   opacity: var(--shadow-opacity, .35); filter: blur(var(--shadow-blur, 1.2cqw)); transform: translate3d(0, var(--shadow-y, 13.5cqw), 0); will-change: transform, opacity; }
 
-/* Custom cursor: purely decorative, never receives clicks. The native cursor is hidden only after it works. */
+/* Custom cursor: purely decorative, never receives clicks. Wouldn't want that now would we. I didn't know CSS could do that... The native cursor is hidden only after it works. */
 #custom-cursor { position: fixed; left: 0; top: 0; z-index: 200; width: 22px; height: 22px; pointer-events: none; opacity: 0; color: var(--accent); }
 #custom-cursor.is-visible { opacity: 1; }
 #custom-cursor svg { display: block; width: 100%; height: 100%; fill: currentColor; stroke: var(--bg); stroke-width: 1.5; paint-order: stroke; }
@@ -233,3 +239,76 @@ body.hover-on .product-visual:hover .product-art { transform: scale(1.08); }
 .member { position: relative; }
 .member + .member::before { content: ""; position: absolute; top: calc(var(--divider-space) * -1); left: 50%; width: min(var(--divider-width), 100%);
   height: var(--divider-thickness); background: currentColor; opacity: var(--divider-opacity); transform: translateX(-50%); }
+
+/* Intro scroll lock. So that you can't scroll during the intro. The lock goes on <html>: it already sets overflow-x, so overflow on <body> is not passed up to the viewport. */
+html.is-scroll-locked, html.is-scroll-locked body { overflow: hidden; overscroll-behavior: none; }
+#intro { overflow: hidden; touch-action: none; overscroll-behavior: none; }
+
+/* Slow fade-out when the intro ends. The site is already rendering underneath, so this fade is the whole reveal. Drum rolls please. */
+#intro { transition: opacity var(--intro-fade-ms, 1800ms) ease; }
+#intro.is-leaving { opacity: 0; }
+
+/* Price stuff, like just price rendering */
+.price-board { width: min(1000px, 90%); margin: 0 auto; padding: 8rem 0 0; text-align: center; }
+.price-board + #product-list { padding-top: 6rem; }
+.price-board h2 { margin: 0; font-family: var(--font-display); font-size: clamp(2.5rem, 9vw, 6rem); line-height: .9; text-transform: uppercase; }
+.price-note { margin: .75rem 0 2.5rem; opacity: .75; }
+#price-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1.75rem; margin: 0; padding: 0; list-style: none; }
+.price-tag { position: relative; min-width: 0; padding: 2rem 1rem 1.25rem; background: #ffd23f; color: #111; border: 3px solid #111; border-radius: var(--radius);
+  box-shadow: 6px 6px 0 #111; transform: rotate(-2deg); }
+.price-tag:nth-child(even) { transform: rotate(1.5deg); }
+.price-tag::before { content: ""; position: absolute; top: .65rem; left: 50%; width: .9rem; height: .9rem; margin-left: -.45rem;
+  border-radius: 50%; background: var(--bg); border: 3px solid #111; }
+.price-title { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.price-artist { display: block; font-size: .9rem; opacity: .8; }
+.price-amount { display: block; margin-top: .5rem; font-family: var(--font-display); font-size: clamp(3rem, 8vw, 4.5rem); line-height: 1; }
+.price-amount small { margin-right: .1em; font: 600 .4em var(--font-body); vertical-align: top; }
+
+/* Cassette tape draggable and snaps to corners*/
+
+#mini-player[data-corner="bl"] { top: auto; right: auto; bottom: 1rem; left: 1rem; }
+#mini-player[data-corner="br"] { top: auto; left: auto; bottom: 1rem; right: 1rem; }
+#mini-player[data-corner="tl"] { bottom: auto; right: auto; top: 4.5rem; left: 1rem; }
+#mini-player[data-corner="tr"] { bottom: auto; left: auto; top: 4.5rem; right: 1rem; }
+#mini-art { cursor: grab; touch-action: none; user-select: none; }
+#mini-player.is-dragging #mini-art { cursor: grabbing; }
+#mini-player.is-dragging { will-change: transform; }
+
+.trail-dot { position: fixed; left: 0; top: 0; z-index: 200; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); pointer-events: none; opacity: 0; will-change: transform, opacity; }
+
+/* Promo above the prices. The whole panel is a size container, so text, keychain and layout scale with the panel's own width. */
+.promo { container-type: inline-size; width: min(1000px, 90%); margin: 6rem auto 0; padding: clamp(1.5rem, 5vw, 3rem);
+  background: var(--accent); color: #111; border: 3px solid #111; border-radius: var(--radius); box-shadow: 8px 8px 0 #111; /* flat accent + black outline + hard shadow, like the cassette and the price tags */
+  transition: background-color var(--theme-ms); }
+.promo-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: clamp(1.5rem, 6cqw, 3rem); align-items: center; }
+.promo h2 { margin: 0 0 1rem; font-family: var(--font-display); font-size: clamp(1.5rem, 5.2cqw, 2.8rem); line-height: 1.08; color: white;}
+.promo p { margin: .6rem 0; font-size: clamp(.95rem, 2.3cqw, 1.2rem); line-height: 1.5; }
+.promo-hint { font-size: clamp(.8rem, 1.8cqw, .9rem) !important; opacity: .65; }
+.size-chip { min-height: 44px; padding: .2rem .8rem; font: 700 1em var(--font-body); background: #ffd23f; color: #111; border: 2px solid #111; border-radius: 999px; box-shadow: 3px 3px 0 #111; }
+.size-chip:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #111; }
+.keychain-demo { justify-self: center; display: grid; justify-items: center; margin: 0; width: clamp(110px, 24cqw, 210px); transform-origin: 50% 0; animation: kc-sway 7s ease-in-out infinite; }
+.kc-ring { position: relative; z-index: 2; width: 34%; aspect-ratio: 1; margin-bottom: -17%; border: 5px solid #111; border-radius: 50%; } /* in front; its bottom arc passes through the hole */
+.kc-body { position: relative; width: 100%; aspect-ratio: var(--kc-ratio, .654); background: rgba(255, 255, 255, .4); border: 3px solid #111; border-radius: 12px; }
+.kc-hole { position: absolute; top: 0; margin-top: 9%; left: 50%; width: 12%; aspect-ratio: 1; margin-left: -6%; background: var(--accent); border: 2px solid #111; border-radius: 50%; } /* centre sits 15% of the width down, where the ring passes */
+.dim { position: absolute; font-size: clamp(.7rem, 1.9cqw, .85rem); font-weight: 700; color: #111; white-space: nowrap; }
+.dim-w { bottom: 8%; left: 0; right: 0; text-align: center; }
+.dim-w::before { content: "↔ "; }
+.dim-h { top: 0; bottom: 0; right: 7%; display: flex; align-items: center; writing-mode: vertical-rl; }
+.dim-h::before { content: "↕ "; }
+@keyframes kc-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@container (max-width: 620px) { .promo-grid { grid-template-columns: minmax(0, 1fr); text-align: center; } .keychain-demo { width: clamp(110px, 38cqw, 170px); } }
+@media (prefers-reduced-motion: reduce) { .keychain-demo { animation: none; } }
+
+/* Mobile friendliness: no double-tap zoom delay, no grey tap flash, bigger tap targets */
+html { -webkit-text-size-adjust: 100%; }
+a, button, [role="button"] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+@media (max-width: 800px) {
+  nav a { padding: .7rem .35rem; }
+  #intro-skip { padding: .75rem 1.25rem; }
+  #mini-player { width: clamp(96px, 28vw, 128px); padding: .45rem; }
+  .mini-controls button { min-height: 40px; }
+  .product { margin-bottom: 12vh; }
+  .product-title { font-size: clamp(1.6rem, 8vw, 2.2rem); }
+}
+
+/* welp, hope nobody reads this mess */

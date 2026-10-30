@@ -1,8 +1,8 @@
-/* Genres — script.js
-   Sections: 1 CONFIG · 2 PRODUCTS · 3 Helpers · 4 Music + SFX · 5 Theme + foreground
-             6 Product rendering · 7 Pages · 8 Scroll · 9 Intro · 10 Start */
+/* Ah, Salaam and good evening to you, worthy friend. Please, please, come closer... Too close!
+A little too close. There. Welcome to my code. 
+City of mystery, of enchantment, and the finest merchandise this side of the internet, on sale today! Come on down */
 
-// ===== 1. CONFIG (EDIT HERE) =====
+// ######################## my beautiful config ###########################
 const CONFIG = {
   // Feature flags: set false to switch a system fully off (its code never runs).
   features: {
@@ -16,27 +16,39 @@ const CONFIG = {
     musicalNotes: true,     // scroll-reactive notes + staff lines
     cassettePhysics: true,  // floating + draggable home cassette
     reels: true,            // reels turn with scroll
-    visualizer: true,       // audio-reactive bars (needs http://, see README)
-    customCursor: true      // cassette-style cursor (desktop mouse only)
+    visualizer: false,       // audio-reactive bars (needs http://, see README)
+    customCursor: true,      // cassette-style cursor (desktop mouse only)
+    touchTrail: true
   },
   intro: {
-    videoSrc: 'assets/intro.mp4',      // REPLACE ASSET (.mp4; leave '' to skip the animation)
-    musicSrc: 'assets/intro-music.mp3',// REPLACE ASSET ('' = no intro music)
-    iconSize: 'clamp(64px, 12vw, 88px)', // headphones icon size (any CSS length)
-    iconGap: '1rem',                     // space between icon and text
-    noticeMs: 2000,                    // how long "Headphones recommended" shows
-    logoMs: 1800,                      // how long the logo shows
-    maxDurationMs: 8000,               // safety timeout: intro always ends by then
-    showEveryVisit: false,             // true = ignore the "already seen" memory (handy while testing)
-    storageKey: 'genres-intro-seen'   // localStorage key; delete it to see the intro again
+    // Assets
+    videoSrc: 'assets/download.mp4',         // intro animation ('' = skip the animation)
+    musicSrc: 'assets/starting-music.mp3',   // intro music ('' = no intro music)
+    videoFit: 'contain',                     // 'contain' = whole animation visible, 'cover' = fills the screen and crops
+    // Headphones notice
+    iconSize: 'clamp(64px, 12vw, 88px)',     // icon size (any CSS length)
+    iconGap: '1rem',                         // space between icon and text
+    // Timing (milliseconds)
+    noticeMs: 2000,                          // how long "Headphones recommended" shows
+    logoMs: 1800,                            // how long the logo shows
+    maxDurationMs: 8000,                     // safety timeout: the animation step always ends by then
+    fadeOutMs: 1800,                         // fade-out that reveals the site (0 = instant cut)
+    // First-visit memory
+    showEveryVisit: false,                   // true = ignore the "already seen" memory (handy while testing)
+    storageKey: 'genres-intro-seen'          // localStorage key; delete it to see the intro again
   },
   audio: {
-    homeSrc: 'assets/home.mp3',        // REPLACE ASSET: home + order page music
+    scratchVolume: 0.4,
+    releaseSrc: 'assets/cassette-release.mp3',
+    releaseVolume: 1.6,
+    homeSrc: 'assets/what-i-like.mp3',       // home + order page music
     volume: 0.7,
-    crossfadeMs: 1500,                 // length of every music crossfade
+    crossfadeMs: 1500,                       // length of every music crossfade
+    preloadAlbums: true,                     // start downloading album tracks when the product page first opens
     sfxVolume: 0.6,
-    clickSrc: 'assets/click.mp3',      // REPLACE ASSET ('' = no click sound)
-    scratchSrc: 'assets/scratch.mp3'   // REPLACE ASSET: plays when the active album changes
+    clickSrc: 'assets/click.mp3',            // ('' = no click sound)
+    scratchSrc: 'assets/scratch.mp3',         // plays when the active album changes
+    clickVolume: 1,
   },
   gifWipe: { direction: 'left', durationMs: 900 }, // 'left' | 'right' | 'down'
   brand: { name: 'Genres', iconSrc: 'assets/brand-icon.png' }, // REPLACE ASSET: small icon beside the header wordmark
@@ -48,71 +60,125 @@ const CONFIG = {
   },
   marquee: { minFontPx: 14, maxFontPx: 22, fontToWidth: 0.045, pixelsPerSecond: 60 }, // text size follows marquee width, speed is constant
   cassettePhysics: { drag: true, followCursor: true, floatPx: 6, followPx: 14, stiffness: 0.08, damping: 0.86, limitRatio: 0.25 },
-  // Cassette images (REPLACE ASSET). ratio = image width / height, so reels line up exactly.
-  // reels.src = a transparent PNG of ONE reel. Leave '' if the image has no separate reel layer: the overlay then stays OFF.
+  // Cassette images [################]
+  // reels.src = a transparent PNG of ONE reel.
   // leftX / rightX / y = reel centers and size = reel width, all as fractions (0 to 1) of the image.
   images: {
-    hero:   { src: 'assets/hero-cassette.gif', ratio: '3 / 2', reels: { src: '', leftX: 0.3, rightX: 0.7, y: 0.42, size: 0.2 } },
+    hero:   { src: 'assets/cassette-draggable.png', ratio: '3 / 2', reels: { src: '', leftX: 0.3, rightX: 0.7, y: 0.42, size: 0.2 } },
     player: { src: 'assets/mini-cassette.png', ratio: '3 / 2', reels: { src: '', leftX: 0.3, rightX: 0.7, y: 0.42, size: 0.2 } }
   },
   reels: { degreesPerPx: 0.35 },                       // how far the reels turn per scrolled pixel
   cassetteShadow: { opacity: 0.35, blurCqw: 1.2, widthCqw: 30, heightCqw: 4.5, offsetCqw: 13.5, liftFade: 0.5 }, // cqw = 1% of hero width
-  visualizer: { bars: 8, intensity: 1.4, updateHz: 30 },
-  orderFormUrl: 'https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform?embedded=true' // EDIT HERE
+  visualizer: { bars: 8, intensity: 1.4, updateHz: 30 }, //no need, glorified decoration
+  // Debug helpers. Set enabled to false before launch, or visitors can replay the intro too.
+  // replayIntroKey is compared as typed, so 'I' means Shift+I.
+  debug: { enabled: true, replayIntroKey: 'I' },
+  currency: '₱',
+  keychainSize: { widthCm: 3.4, heightCm: 5.2 },
+  orderFormUrl: 'https://forms.gle/fo1NWeFeumJz2D8x5' // EDIT HERE / PLACEHOLDAH
 };
 
-// ===== 2. PRODUCTS (EDIT HERE: one object = one album card) =====
+// ############################# PRODUCTS ######################################################3
 // Theme keys (all optional, missing ones fall back to the default theme in styles.css):
 // bg, text, accent, accent2 = page colors while this album is active; surface, surfaceText = card colors
 const PRODUCTS = [
   {
     id: 'album-one',
-    title: 'ALBUM ONE',                              // placeholder
-    artist: 'Artist Name',
-    description: 'Lorem ipsum dolor sit amet, placeholder description.',
-    image: 'assets/albums/album-one.jpg',            // REPLACE ASSET: artwork for the background
-    animation: 'assets/albums/album-one-cassette.gif', // REPLACE ASSET: cassette animation
-    squareBackground: '#2a2a3a',                     // color/gradient behind the animation
-    font: "'Rubik Mono One', Impact, sans-serif",    // product font + fallbacks
-    theme: { bg: '#14141c', text: '#f2efe9', accent: '#c9a24a', accent2: '#6b7a99', surface: '#f2efe9', surfaceText: '#14141c' },
-    artOpacity: 0.35, artTint: '#14141c',
-    songs: ['Blank 1', 'Blank 2', 'Blank 3'],        // add or remove titles freely
-    featuredAudio: 'assets/audio/album-one.mp3',     // REPLACE ASSET ('' = silence for this album)
-    foregroundGif: 'assets/fg/album-one.gif'         // optional; '' = no overlay
+    title: 'Bewitched',
+    artist: 'Laufey',
+    description: 'Laufey’s Bewitched is a gorgeous blend of jazz and bedroom pop that captures exactly what it feels like to fall in love. She made the album to prove that orchestral music isnt just for history books, but is the perfect backdrop for the messy feelings of navigating your twenties. Between the sweeping strings and her warm vocals, it feels like an intimate late-night conversation, breathing fresh life into an old-school sound for a whole new generation.',
+    image: 'assets/albums/bewitched.webp',                // artwork for the fixed background
+    animation: 'assets/albums/bewitched.png',    // cassette image or animation
+    squareBackground: '#8b4e22',                          // color/gradient behind the cassette
+    font: "'Playfair Display', Georgia, serif",         // product font + fallbacks
+    theme: { bg: '#f7e7d6', text: '#3b2a20', accent: '#b5533c', accent2: '#7d8f69', surface: '#fffaf3', surfaceText: '#3b2a20' },
+    artOpacity: 0.25, artTint: '#f7e7d6',
+    songs: ['Dreamer', 'Second Best', 'Haunted', 'Must Be Love', 'While You Were Sleeping', 'Lovesick', 'California and Me', 'Nocturne (Interlude)', 'Promise', 'From The Start', 'Misty', 'Serendipity', 'Letter To My 13 Year Old Self', 'Bewitched'],             // add or remove titles freely
+    featuredAudio: 'assets/audio/thestart.mp3',           // '' = silence for this album
+    foregroundGif: 'assets/fg/bewitched.png'              // optional but looks nice hehe; '' = no overlay
   },
   {
     id: 'album-two',
-    title: 'Album Two',
-    artist: 'Artist Name',
-    description: 'Lorem ipsum dolor sit amet, placeholder description.',
-    image: 'assets/albums/album-two.jpg',
-    animation: 'assets/albums/album-two-cassette.gif',
-    squareBackground: '#f3d9c4',
-    font: "'Playfair Display', Georgia, serif",
-    theme: { bg: '#f7e7d6', text: '#3b2a20', accent: '#b5533c', accent2: '#7d8f69', surface: '#fffaf3', surfaceText: '#3b2a20' },
-    artOpacity: 0.25, artTint: '#f7e7d6',
-    songs: ['Blank 1', 'Blank 2', 'Blank 3'],
-    featuredAudio: 'assets/audio/album-two.mp3',
+    title: 'This Is How Tomorrow Moves',
+    artist: 'beabadoobee',
+    description: '90’s and 2000s indie music, folk ballads, jazzy undertones, and dream pop, building on Beabadoobee’s earlier lo-fi bedroom pop roots. This album serves as an intimate journal on self-acceptance, growth, and navigating through early adulthood—a shift that earned Beabadoobee her very first number-one debut on the UK Albums Chart.',
+    image: 'assets/albums/tomorrow.webp',
+    animation: 'assets/albums/tomorrow.png',
+    squareBackground: '#f1d8e3',
+    font: "'Syne Mono', Impact, sans-serif",
+    theme: { bg: '#f6e4c2', text: '#ca8e55', accent: '#f4d9bb', accent2: '#7d8f69', surface: '#3e3858', surfaceText: '#e2cfc4' },
+    artOpacity: 0.25, artTint: '#d99cdf',
+    songs: ["Take a Bite", "California", "One Time", "Real Man", "Tie My Shoes", "Girl Song", "Coming Home", "Ever Seen", "A Cruel Affair", "Post", "Beaches", "Everything I Want", "The Man Who Left Too Soon", "This Is How It Went"],
+    featuredAudio: 'assets/audio/abite.mp3',
     foregroundGif: ''
-  }
-];
+  },
+  {
+    id: 'album-three',
+    title: 'Who Cares?',
+    artist: 'Rex Orange County',
+    description: 'Indie pop, bedroom pop, alternative pop, and orchestral influences, blending upbeat melodies, playful production, and introspective songwriting. The album explores love, heartbreak, loneliness, and emotional uncertainty, balancing cheerful instrumentals with vulnerable reflections on relationships and self-worth. Through its contrast between bright, energetic arrangements and bittersweet lyrics, it captures the experience of navigating young adulthood and learning to move forward despite emotional setbacks.',
+    image: 'assets/albums/album-three.jpg',
+    animation: 'assets/albums/whocares.png',
+    squareBackground: '#f2eded',
+    font: "'Fraunces', Georgia, serif",
+    theme: { bg: '#d3c6a2', text: '#193723', accent: '#e8d3e0', accent2: '#697b8f', surface: '#aeb7a6', surfaceText: '#193723' },
+    artOpacity: 0.30, artTint: '#d3c6a2',
+    songs: ["10/10", "Always", "Laser Lights", "Face to Face", "Stressed Out", "Never Had the Balls", "Pluto Projector", "Every Way", "It Gets Better", "It's Not the Same Anymore"],
+    featuredAudio: 'assets/audio/shade.mp3',
+    foregroundGif: ''
+  },
+    {
+    id: 'album-four',
+    title: 'NEVER ENOUGH',
+    artist: 'Daniel Ceasar',
+    description: 'Alternative R&B, neo-soul, gospel, and soul influences, blending lush harmonies, atmospheric production, and intimate vocals. The album explores love, longing, self-doubt, and emotional vulnerability, creating a reflective journey through complicated relationships and the desire for deeper connection, while balancing stripped-back ballads with rich, layered arrangements.',
+    image: 'assets/albums/neverenough.jpg',
+    animation: 'assets/albums/neverenough.png',
+    squareBackground: '#200962',
+    font: "'DM Serif Display', Georgia, serif",
+    theme: { bg: '#040817', text: '#d2dff4', accent: '#164cf4', accent2: '#72bef8', surface: '#0c1a3a', surfaceText: '#a4bfe8' },
+    artOpacity: 0.25, artTint: '#283256',
+    songs: ["Ocho Rios", "Valentina", "Toronto 2014", "Let Me Go", "Do You Like Me?", "Always", "Cool", "Disillusioned", "Buyer's Remorse", "Shot My Baby", "Pain Is Inevitable", "Homiesexual", "Vince Van Gogh", "Superpowers", "Unstoppable"],
+    featuredAudio: 'assets/audio/superpower.mp3',
+    foregroundGif: 'assets/fg/superpowers.png'
+  },
+  {
+    id: 'album-five',
+    title: 'Customize your own!',
+    artist: 'And most importantly..',
+    description: 'Pick your favorite album and get it customized if you bought at least one of our keychain variants.',
+    image: 'assets/albums/album-one.jpg',                // artwork for the fixed background
+    animation: 'assets/albums/mystery.png',    // cassette image or animation
+    squareBackground: '#000000',                          // color/gradient behind the cassette
+    font: "'Archivo Black', Georgia, serif",         // product font + fallbacks
+    theme: { bg: '#f4efe6', text: '#1b3a5c', accent: '#d94f30', accent2: '#1b3a5c', surface: '#f4efe6', surfaceText: '#303036' },
+    artOpacity: 0.25, artTint: '#f4efe6',
+    songs: ['you seem pretty sad for a girl so in love', 'The Life Of A Showgirl', 'I’m The Problem', 'Dandelion', 'The Great Divide', 'HABIBTI', 'The Art Of Loving', 'Stick Season', 'Palace For The People', 'ICEMAN'],             // add or remove titles freely
+    featuredAudio: 'assets/what-i-like.mp3',           // '' = silence for this album
+    foregroundGif: ''              // optional but looks nice hehe; '' = no overlay
+  },
+]; //femboy
 
 // Products inherit these defaults for anything they do not define. theme {} = use the default theme.
 const PRODUCT_DEFAULTS = {
+  artScale: 1,
+  price: 45,
   font: "'Inter', system-ui, sans-serif", squareBackground: '#ddd', theme: {}, image: '', animation: '',
   artRatio: '3 / 2', reels: { src: '', leftX: 0.3, rightX: 0.7, y: 0.42, size: 0.2 }, // see CONFIG.images
   artOpacity: 0.3, artTint: 'transparent', songs: [], featuredAudio: '', foregroundGif: ''
 };
 PRODUCTS.forEach((p, i) => { PRODUCTS[i] = { ...PRODUCT_DEFAULTS, ...p, theme: { ...PRODUCT_DEFAULTS.theme, ...p.theme } }; });
 
-// Home page members (EDIT HERE). Cards alternate left/right automatically.
+// Home page members. Cards alternate left/right automatically/dynamically. So very kakoi.
 const MEMBERS = [
-  { name: 'Member One', role: 'Role', description: 'Lorem ipsum, short placeholder description.', portrait: 'assets/members/member-one.jpg' },
-  { name: 'Member Two', role: 'Role', description: '', portrait: 'assets/members/member-two.jpg' },
-  { name: 'Member Three', role: 'Role', description: 'Lorem ipsum, short placeholder description.', portrait: 'assets/members/member-three.jpg' }
+  { name: 'Cale Ang', role: 'Project Leader / Social Science Head / Software Developer / Co-Math Head / Animator / Web Designer', description: 'Good day everybody, welcome to this wonderful website where we sell keychains from your favorite album. Hope you enjoy the website and use it as inspiration to create websites even cooler than this! Take it away team.', portrait: 'assets/members/disc.jpg' },
+  { name: 'Gabrielle Tuazon', role: 'Excecutive / Logistics Coordinator / Financer / Documentor', description: 'Hi everyone! Welcome to our website! I’m Brielle Tuazon. Thank you so much for choosing us to order keychains from! Don’t hesitate to reach out if you have a question. We all hope you like the products and we appreciate the support!', portrait: 'assets/members/guitar.jpg' },
+  { name: 'Sebastian Valencia', role: 'Mathematics Head / Co-Financer / Product Overseerer / Coordinator', description: 'What is of the up 🤩I helped with the google forms 😎 Come buy some of our keychains!! ❤️❤️', portrait: 'assets/members/drums.jpg' },
+  { name: 'Jia Mapanoo', role: 'Material Handler / Quality Overseerer / Product Description Writer', description: 'Hello everybody and welcome! I am the 4th member of the genres Jia Mapanoo, we are officially open and I am so eager to share what our shop has to offer. I hope you guys find something you love from our shop and make sure you stop by to say hello to us in our stand!', portrait: 'assets/members/violin.jpg' },
+  { name: 'Leida Vidal', role: 'Purchasing Agent / Materials Planner / Product Sourcer', description: 'Greetings everyone! and welcome to our website. My name is Leida Vidal, a fellow member of the genres and i am ready and eager to serve you. I hope you will enjoy our site where you could view the different variations of our product and im very excited to sell you our products at our stand. See you there!', portrait: 'assets/members/microphone.jpg' }
 ];
 
-// ===== 3. HELPERS =====
+// ############################# HELPERS! ######################################################3
 const $ = (selector) => document.querySelector(selector);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -123,50 +189,76 @@ function storageSet(key, value) { try { localStorage.setItem(key, value); } catc
 function fadeTo(audio, target, ms, onDone) {
   const from = audio.volume, startTime = performance.now(), token = {};
   audio._fade = token;
-  function step(now) {
+  function step() {
     if (audio._fade !== token) return;
-    const t = ms > 0 ? Math.min(1, (now - startTime) / ms) : 1;
+    const t = ms > 0 ? Math.min(1, (performance.now() - startTime) / ms) : 1;
     audio.volume = from + (target - from) * t;
-    if (t < 1) requestAnimationFrame(step); else if (onDone) onDone();
+    if (t < 1) setTimeout(step, 30); else if (onDone) onDone();
   }
-  step(startTime);
+  step();
 }
 
-// Builds the cassette picture used by products, the hero and the mini player.
-// The CSS placeholder is removed automatically once the real image loads.
+// Builds the cassette picture used by products, the hero and the mini player. Our mascot :heart-emoji:
+// The CSS placeholder is removed automatically once the real image loads, in a way acts as a substitute if file ceases to load or a background error.
 function artFrameHtml(src, alt, ratio, reels) {
   const reelHtml = CONFIG.features.reels && reels && reels.src
     ? [reels.leftX, reels.rightX].map((x) => `<span class="reel" style="left:${x * 100}%;top:${reels.y * 100}%;width:${reels.size * 100}%;background-image:url('${reels.src}')"></span>`).join('')
     : '';
   const image = src ? `<img src="${src}" alt="${alt}" loading="lazy" draggable="false" onload="this.previousElementSibling.remove()" onerror="this.remove()">` : '';
+  const [aw, ah] = String(ratio || '3 / 2').split('/').map(Number);
   return `<div class="art-frame" style="--art-ratio:${ratio || '3 / 2'}"><div class="cassette"><span class="placeholder-label">PLACEHOLDER</span></div>${image}${reelHtml}</div>`;
 }
 
-// ===== 4. MUSIC + SOUND EFFECTS =====
+// ############################# SOUND DESIGN ######################################################3
 // Music is the ONLY thing that plays background tracks. Everything else just calls Music.request(src).
 const Music = {
+  tracks: {},        // one <audio> per file, created once and reused (building a fresh one on every album change was slow)
   current: null,     // the track that should be audible now
-  all: [],           // every track still fading out/in (so we can never leave strays playing)
+  all: [],           // every track still fading in or out, so we can never leave strays playing
   wantedSrc: '',     // what SHOULD be playing; remembered even while the user has paused
   userPaused: false, // true after the visitor presses pause
   blocked: false,    // true if the browser refused autoplay (waiting for a click)
+  preloaded: false,
 
+  getTrack(src) {
+    if (!this.tracks[src]) {
+      const audio = new Audio();
+      audio.loop = src !== CONFIG.intro.musicSrc;
+      audio.loop = true; audio.preload = 'auto'; audio.dataset.src = src; audio.src = src;
+      this.tracks[src] = audio;
+    }
+    return this.tracks[src];
+  },
+  preloadAlbums() {                    // called the first time the product page opens
+    if (this.preloaded || !CONFIG.features.music || !CONFIG.audio.preloadAlbums) return;
+    this.preloaded = true;
+    PRODUCTS.forEach((p) => { if (p.featuredAudio) this.getTrack(p.featuredAudio); });
+  },
   request(src) {                       // call this whenever the "right" track changes
     this.wantedSrc = src || '';
     if (!this.userPaused) this.crossfadeTo(this.wantedSrc);
   },
   crossfadeTo(src) {
     if (!CONFIG.features.music) return;
-    if (this.current && this.current.dataset.src === src) return; // already on this track
-    this.all.slice().forEach((a) => this.fadeOutAndStop(a));       // fade out everything old
+    if (this.current && this.current.dataset.src === src) return;   // already on this track
+    const next = src ? this.getTrack(src) : null;
+    this.all.filter((a) => a !== next).forEach((a) => this.fadeOutAndStop(a)); // fade out everything else, js to make sure
     this.current = null;
-    if (!src) { this.report(); return; }
-    const next = new Audio(src);
-    next.loop = true; next.volume = 0; next.dataset.src = src;
-    this.current = next; this.all.push(next);
+    if (!next) { this.report(); return; }
+    if (next.paused) next.volume = 0;                               // a track still fading out keeps its volume, no jump
+    this.current = next;
+    if (!this.all.includes(next)) this.all.push(next);
+    //console.log("test5")
     next.play()
-      .then(() => { fadeTo(next, CONFIG.audio.volume, CONFIG.audio.crossfadeMs); this.report(); Visualizer.attach(next); })
-      .catch((err) => {                // missing file or autoplay blocked: never throw
+      .then(() => {
+        // Big files migggghttt take a while to start. If the visitor scrolled on meanwhile, a newer crossfade is already
+        // fading this track out; fading it back in would leave it playing over the next album. Zombies are for movies.
+        if (this.current !== next) return;
+        fadeTo(next, CONFIG.audio.volume, CONFIG.audio.crossfadeMs);
+        this.report();
+        //Visualizer.attach(next);
+      })
+      .catch((err) => {                // missing file or autoplay blocked: never throw, wouldn't want missingno to happen now would we (my catchphrase)
         this.drop(next);
         if (err && err.name === 'NotAllowedError') this.blocked = true;
         this.report();
@@ -176,13 +268,13 @@ const Music = {
     fadeTo(audio, 0, CONFIG.audio.crossfadeMs, () => this.drop(audio, true));
   },
   drop(audio, pause) {
-    Visualizer.detach(audio);
-    if (pause) audio.pause();
+    if (pause) audio.pause();          // paused, not deleted: the same element is reused next time
     this.all = this.all.filter((a) => a !== audio);
     if (this.current === audio) this.current = null;
   },
   pause() {                            // global pause: stops ALL music
     this.userPaused = true;
+    Sfx.play(CONFIG.audio.scratchSrc, CONFIG.audio.scratchVolume);
     this.all.slice().forEach((a) => this.fadeOutAndStop(a));
     this.current = null;
     this.report();
@@ -199,20 +291,45 @@ const Music = {
   }
 };
 
-// Sound effects use one shared element, so two effects can never overlap.
 const Sfx = {
-  element: null,
-  play(src) {
+  elements: {},      // file path -> its <audio> element
+  unlocked: false,
+
+  getElement(src) {
+    if (!this.elements[src]) {
+      const audio = new Audio(src);
+      audio.preload = 'auto';
+      this.elements[src] = audio;
+    }
+    return this.elements[src];
+  },
+  play(src, volume = 1) {
     if (!CONFIG.features.sfx || !src) return;
-    if (!this.element) this.element = new Audio();
-    if (!this.element.paused) return;
-    this.element.src = src;
-    this.element.volume = CONFIG.audio.sfxVolume;
-    this.element.play().catch(() => { /* missing file or blocked: ignore */ });
+    const audio = this.getElement(src);
+    audio.volume = Math.min(1, Math.max(0, CONFIG.audio.sfxVolume * volume));
+    audio.preservesPitch = false;
+    audio.webkitPreservesPitch = false;
+    audio.playbackRate = 0.8 + Math.random() * 0.6;
+    audio.currentTime = 0;                          // restart rather than overlap or ignore
+    audio.play().catch((err) => {
+      // AbortError only means a newer trigger interrupted this one. Anything else is worth knowing about.
+      if (err.name !== 'AbortError') console.warn('SFX did not play:', src, err.name);
+    });
+  },
+  // The scratch is triggered by scrolling, rather than clicking *click *click
+  unlock() {
+    if (this.unlocked || !CONFIG.features.sfx || !CONFIG.audio.scratchSrc) return;
+    this.unlocked = true;
+    const audio = this.getElement(CONFIG.audio.scratchSrc);
+    audio.muted = true;
+    audio.play()
+      .then(() => { audio.pause(); audio.currentTime = 0; audio.muted = false; })
+      .catch(() => { audio.muted = false; });
   }
 };
+['pointerdown', 'keydown'].forEach((type) => window.addEventListener(type, () => Sfx.unlock(), { once: true, passive: true })); //listener for events
 
-// ===== 5. THEME + FOREGROUND GIF =====
+// ############################# FOREGROUND GIF ######################################################3
 const THEME_VARS = { bg: '--bg', text: '--text', accent: '--accent', accent2: '--accent-2' };
 
 // Sets album colors, or removes them (theme = null) so the default theme returns.
@@ -234,26 +351,56 @@ function setBackgroundArt(product) {
   }
 }
 
-// Wipe reveal (not a fade). Each entry is the fully hidden clip-path for that direction.
-const WIPE_HIDDEN = { left: 'inset(0 100% 0 0)', right: 'inset(0 0 0 100%)', down: 'inset(0 0 100% 0)' };
-function showForeground(src) {
-  const el = $('#foreground-gif');
-  const hidden = WIPE_HIDDEN[CONFIG.gifWipe.direction] || WIPE_HIDDEN.left;
-  const ms = reduceMotion ? 0 : CONFIG.gifWipe.durationMs;
-  if (!src) {                                   // no GIF: wipe the old one away
-    el.style.transition = `clip-path ${ms}ms ease`;
-    el.style.clipPath = hidden;
-    return;
+const BRUSH = {
+  left:  { vertical: false, flip: false, size: '300% 100%', hidden: '100% 0%', shown: '0% 0%' },
+  right: { vertical: false, flip: true,  size: '300% 100%', hidden: '0% 0%',   shown: '100% 0%' },
+  down:  { vertical: true,  flip: false, size: '100% 300%', hidden: '0% 100%', shown: '0% 0%' }
+};
+
+// Draws a new ragged bristle edge every time, so no two reveals look the same.
+function brushMaskUrl(dir) {
+  const bands = 120, step = 100 / bands;
+  let wobble = 0, bars = '';
+  for (let i = 0; i < bands; i++) {
+    wobble = Math.max(-25, Math.min(25, wobble * 0.6 + (Math.random() - 0.5) * 30));
+    let edge = 150 + wobble;
+    if (Math.random() < 0.12) edge = Math.min(195, edge + Math.random() * 20);
+    const start = dir.flip ? 300 - edge : 0, at = i * step, thick = step + 0.6;
+    bars += dir.vertical
+      ? `<rect x="${at}" y="${start}" width="${thick}" height="${edge}"/>`
+      : `<rect x="${start}" y="${at}" width="${edge}" height="${thick}"/>`;
   }
-  el.style.transition = 'none';                 // cut the old one instantly, then wipe the new one in
-  el.style.clipPath = hidden;
-  el.style.backgroundImage = `url("${src}")`;
-  void el.offsetWidth;                          // forces the browser to apply the reset above
-  el.style.transition = `clip-path ${ms}ms ease`;
-  el.style.clipPath = 'inset(0)';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${dir.vertical ? '0 0 100 300' : '0 0 300 100'}" preserveAspectRatio="none">${bars}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-// The one place that reacts to "a different album is now active".
+function setMask(el, props) {
+  Object.entries(props).forEach(([name, value]) => {
+    el.style.setProperty('mask-' + name, value);
+    el.style.setProperty('-webkit-mask-' + name, value);
+  });
+}
+
+function showForeground(src) {
+  const el = $('#foreground-gif');
+  const dir = BRUSH[CONFIG.gifWipe.direction] || BRUSH.left;
+  const ms = reduceMotion ? 0 : CONFIG.gifWipe.durationMs;
+  const slide = `mask-position ${ms}ms ease-in-out, -webkit-mask-position ${ms}ms ease-in-out`;
+  el.style.clipPath = 'none';
+  if (!src) {
+    el.style.transition = slide;
+    setMask(el, { position: dir.hidden });
+    return;
+  }
+  el.style.transition = 'none';
+  setMask(el, { image: brushMaskUrl(dir), size: dir.size, repeat: 'no-repeat', position: dir.hidden });
+  el.style.backgroundImage = `url("${src}")`;
+  void el.offsetWidth;
+  el.style.transition = slide;
+  setMask(el, { position: dir.shown });
+}
+
+// The one place that reacts to "a different album is now active". [#######################3]
 let activeId = null;
 function setActiveProduct(product) {
   const id = product ? product.id : null;
@@ -264,11 +411,12 @@ function setActiveProduct(product) {
   if (CONFIG.features.foregroundGifs) showForeground(product && product.foregroundGif);
   if (product) {
     Music.request(product.featuredAudio);
-    Sfx.play(CONFIG.audio.scratchSrc);
+    console.log("works")
+    if (!Music.userPaused) Sfx.play(CONFIG.audio.scratchSrc, CONFIG.audio.scratchVolume);
   }
 }
 
-// ===== 6. PRODUCTS, MARQUEES, ACTIVE-ALBUM SELECTION, MEMBERS =====
+// ############################# MARQUEES ######################################################3
 function renderProducts() {
   const list = $('#product-list');
   PRODUCTS.forEach((p, index) => {
@@ -278,6 +426,8 @@ function renderProducts() {
     article.dataset.id = p.id;
     article.style.setProperty('--product-font', p.font);
     article.style.setProperty('--square-bg', p.squareBackground);
+    article.style.setProperty('--art-scale', p.artScale);
+    if (p.artBreak) article.style.setProperty('--frame-break', p.artBreak);
     if (p.theme.surface) article.style.setProperty('--surface', p.theme.surface);
     if (p.theme.surfaceText) article.style.setProperty('--surface-text', p.theme.surfaceText);
     article.innerHTML = `
@@ -291,11 +441,14 @@ function renderProducts() {
         <div class="marquee" role="group" tabindex="0" aria-label="Songs: ${songs.join(', ')}"><ul class="marquee-track"></ul></div>
       </div>`;
     list.appendChild(article);
+    const visual = article.querySelector('.product-visual');
+    visual.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'touch') visual.classList.add('is-hovered'); });
+    ['pointerleave', 'pointercancel'].forEach((type) => visual.addEventListener(type, () => visual.classList.remove('is-hovered')));
     Marquee.setup(article.querySelector('.marquee'), songs);
   });
 }
 
-// Marquee: sized from ITS OWN width (not the screen). A ResizeObserver re-runs layout() whenever that width changes.
+// Marquee: sized from ITS OWN width (not the screen (dependant boy)). A ResizeObserver re-runs layout() whenever that width changes.
 const Marquee = {
   setup(marqueeEl, songs) {
     marqueeEl._songs = songs;
@@ -317,7 +470,7 @@ const Marquee = {
   }
 };
 
-// The ONLY place that decides which album is active. It calls setActiveProduct(), which drives every effect.
+// The ONLY place that decides which album is currently or rather presently active. It calls setActiveProduct(), which drives every effect soon after.
 const FocusTracker = {
   visible: new Set(),                                           // cards currently on screen
   start() {
@@ -352,11 +505,20 @@ const FocusTracker = {
       if (!keepCurrent) setActiveProduct(PRODUCTS.find((p) => p.id === best.dataset.id));
       return;
     }
-    // Nobody in range. Above the first card = default theme. Between cards or below the last = keep the current album.
+    // Nobody in range so above the first card = default theme then between cards or below the last = keep the current album.
     const first = document.querySelector('.product');
     if (first && first.getBoundingClientRect().top > centerY + reach) setActiveProduct(null);
   }
 };
+
+function renderPrices() {
+  $('#price-list').innerHTML = PRODUCTS.map((p) => `
+    <li class="price-tag">
+      <span class="price-title">${p.title}</span>
+      <span class="price-artist">${p.artist}</span>
+      <span class="price-amount"><small>${CONFIG.currency}</small>${p.price}</span>
+    </li>`).join('');
+}
 
 function renderMembers() {
   MEMBERS.forEach((m, i) => {
@@ -370,7 +532,9 @@ function renderMembers() {
   });
 }
 
-// Home cassette: gentle float, pointer tilt, drag, and an elliptical shadow. Springs always pull it back home.
+// ############################# CASCETTE AND REELS ######################################################3
+// Home cassette: gentle float, pointer tilt, drag, and an elliptical shadow. Imaginary technique: spring physics.
+// Believe it or not this was kind of simple to make, math and physics are my strong suit trusttt
 const CassettePhysics = {
   start() {
     this.el = $('.cassette-wrap'); this.title = $('.hero-title'); this.stage = $('.hero-stage'); this.shadow = $('.cassette-shadow');
@@ -400,7 +564,7 @@ const CassettePhysics = {
     this.el.classList.add('is-draggable');
     this.el.addEventListener('dragstart', (e) => e.preventDefault());           // native image dragging would cancel our pointer events
     this.el.addEventListener('pointerdown', (e) => {
-      if (this.dragging || (e.pointerType === 'mouse' && e.button !== 0)) return; // left button / one finger only
+      if (this.dragging || (e.pointerType === 'mouse' && e.button !== 0)) return; // left button / one finger only, wouldn't want you fingering the cassette now would we
       this.dragging = true; this.el.setPointerCapture(e.pointerId);
       grab = { x: e.clientX - this.pos.x, y: e.clientY - this.pos.y };
     });
@@ -410,7 +574,11 @@ const CassettePhysics = {
       this.vel = { x: x - this.pos.x, y: y - this.pos.y };                     // remember speed for momentum
       this.pos = { x, y };
     });
-    const release = () => { this.dragging = false; };                           // the spring takes over
+    const release = () => {
+      if (!this.dragging) return;
+      this.dragging = false;
+      Sfx.play(CONFIG.audio.releaseSrc, CONFIG.audio.releaseVolume);
+    }; // boing
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((type) => this.el.addEventListener(type, release));
   },
   clamp(value, limit) { return Math.max(-limit, Math.min(limit, value)); },
@@ -423,17 +591,17 @@ const CassettePhysics = {
     const c = CONFIG.cassettePhysics, s = CONFIG.cassetteShadow;
     if (!this.dragging) {
       const targetX = this.cursor.x, targetY = this.cursor.y + Math.sin(now / 1200) * c.floatPx;
-      this.vel.x = (this.vel.x + (targetX - this.pos.x) * c.stiffness) * c.damping;   // spring + damping
-      this.vel.y = (this.vel.y + (targetY - this.pos.y) * c.stiffness) * c.damping;
+      this.vel.x = (this.vel.x + (targetX - this.pos.x) * c.stiffness) * c.damping;   // x damping
+      this.vel.y = (this.vel.y + (targetY - this.pos.y) * c.stiffness) * c.damping;   // y damping - changable in settings/config tho
       this.pos.x = this.clamp(this.pos.x + this.vel.x, this.limit.x);
       this.pos.y = this.clamp(this.pos.y + this.vel.y, this.limit.y);
     }
     const tilt = this.clamp(this.vel.x * 1.5 + this.pos.x * 0.02, 12);
     this.el.style.transform = `translate3d(${this.pos.x}px, ${this.pos.y}px, 0) rotate(${tilt}deg)`;
     this.title.style.transform = `translate3d(${-this.pos.x * 0.15}px, 0, 0)`;  // wordmark drifts the other way = depth
-    // Shadow: when the cassette is lifted (up or being dragged) it gets lighter and slightly wider; settled = crisp.
-    const lift = this.dragging ? 0.6 : Math.max(0, -this.pos.y / (this.limit.y || 1));
-    this.shadow.style.opacity = s.opacity * (1 - s.liftFade * lift);
+    // [#######] shadow system: when the cassette is lifted (up or being dragged) it gets lighter and slightly wider; when settled less blur
+    const lift = this.dragging ? 0.6 : Math.max(0, -this.pos.y / (this.limit.y || 1)); //altitude basically, clamp required
+    this.shadow.style.opacity = s.opacity * (1 - s.liftFade * lift); // opac/blur
     this.shadow.style.transform = `translate3d(${this.pos.x * 0.8}px, var(--shadow-y), 0) scale(${1 + 0.25 * lift})`;
     requestAnimationFrame((t) => this.tick(t));
   }
@@ -449,8 +617,9 @@ function spinReels(y) {
   reelEls.forEach((el) => el.style.setProperty('--reel-angle', reelAngle + 'deg'));
 }
 
-// Audio visualizer: reads the REAL music through a Web Audio analyser. Inactive when nothing is playing.
-const Visualizer = {
+// ############################# AUDIO VISUALIZER ######################################################3
+// audio visualizer: reads the REAL music through a Web Audio analyser. Inactive when nothing is playing. Not sure if this still works though.
+/*const Visualizer = {
   enabled: false, ctx: null, analyser: null, data: null, bars: [], running: false, lastDraw: 0,
   start() {
     // Over file:// the browser would mute audio routed through Web Audio, so only run on http(s).
@@ -471,13 +640,13 @@ const Visualizer = {
         this.data = new Uint8Array(this.analyser.frequencyBinCount);
       }
       await this.ctx.resume();
+      if (audio._vizSource) { this.loop(); return; }   // already routed through the analyser (and must stay that way)
       if (this.ctx.state !== 'running' || audio.paused || Music.current !== audio) return; // otherwise leave normal playback alone
-      audio._vizSource = this.ctx.createMediaElementSource(audio);
+      audio._vizSource = this.ctx.createMediaElementSource(audio); // allowed once per element, never again
       audio._vizSource.connect(this.analyser);
       this.loop();
-    } catch (err) { /* the visualizer is optional: ignore any failure */ }
+    } catch (err) { /* the visualizer is optional: ignore any failure */ /* }
   },
-  detach(audio) { if (audio._vizSource) { audio._vizSource.disconnect(); audio._vizSource = null; } },
   loop() {
     if (this.running) return;
     this.running = true;
@@ -499,20 +668,21 @@ const Visualizer = {
     requestAnimationFrame(draw);
   }
 };
-
+*/
+// custom cursor
 // Custom cursor: a small play icon that follows the mouse. If anything fails, the native cursor stays.
 const CustomCursor = {
   start() {
     if (!CONFIG.features.customCursor || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return; // touch keeps the native cursor
     try {
-      const el = document.createElement('div');
+      const el = document.createElement('div'); //default elem
       el.id = 'custom-cursor'; el.setAttribute('aria-hidden', 'true');
       el.innerHTML = '<svg viewBox="0 0 24 24"><path class="c-play" d="M5 3l15 9-15 9z"/><g class="c-pause"><rect x="5" y="4" width="5" height="16"/><rect x="14" y="4" width="5" height="16"/></g><circle class="c-link" cx="12" cy="12" r="7"/></svg>';
       document.body.appendChild(el);
       let x = 0, y = 0, queued = false;
       window.addEventListener('pointermove', (e) => {
         if (e.pointerType === 'touch') return;
-        x = e.clientX; y = e.clientY;
+        x = e.clientX; y = e.clientY; //mousex & mouseY
         if (!el.classList.contains('is-visible')) {                      // first real mouse move: now hide the native cursor
           el.classList.add('is-visible'); document.documentElement.classList.add('custom-cursor-on');
         }
@@ -532,7 +702,7 @@ const CustomCursor = {
   }
 };
 
-// ===== 7. PAGES (Home / Product Lists / Order) =====
+// page handler [#########]
 const PAGES = ['home', 'products', 'order'];
 let siteReady = false; // becomes true once the intro is finished or skipped
 
@@ -543,7 +713,7 @@ function showPage(name) {
     if (link.dataset.page === name) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   });
   document.body.dataset.page = name;
-  lastScrollY = 0;                       // so the reels do not spin wildly on page change
+  if (name === 'products') Music.preloadAlbums();
   window.scrollTo(0, 0);
   if (name !== 'products') {
     setActiveProduct(null);                                   // restores the default theme
@@ -553,7 +723,7 @@ function showPage(name) {
 }
 window.addEventListener('hashchange', () => showPage(location.hash.slice(1)));
 
-// ===== 8. SCROLL (parallax, header, progress, notes) =====
+// depth-addition algo
 let scrollQueued = false;
 window.addEventListener('scroll', () => {
   if (scrollQueued) return;                    // at most one update per animation frame
@@ -585,7 +755,7 @@ function updateScroll() {
   }
 }
 
-// OPTIONAL FEATURE: scroll-reactive notes. Built once; they only move when the page scrolls.
+// moving notes, my fav, was pretty fun to make (no it was not)
 let notes = [], staff = null;
 function setupNotes() {
   if (!CONFIG.features.musicalNotes) return;   // kill switch: nothing is created
@@ -593,7 +763,7 @@ function setupNotes() {
   layer.className = 'notes-layer'; layer.setAttribute('aria-hidden', 'true');
   staff = document.createElement('div'); staff.className = 'staff';
   layer.appendChild(staff);
-  ['♪', '♫', '♩', '♬'].forEach((symbol, group) => {
+  ['♪', '♫', '♩', '♬'].forEach((symbol, group) => { //just use non-standard ASCII, cause i'm tuff like that
     for (let i = 0; i < 3; i++) {
       const note = document.createElement('span');
       note.className = 'note'; note.textContent = symbol;
@@ -605,30 +775,45 @@ function setupNotes() {
   document.body.prepend(layer);
 }
 
-// ===== 9. INTRO SEQUENCE =====
-function runIntro(onFinish) {
+// ################################# Intro sequence #####################################333
+function setScrollLock(locked) {
+  document.documentElement.classList.toggle('is-scroll-locked', locked);
+}
+
+let introRunning = false;
+function runIntro(onFinish, { ignoreSeen = false } = {}) {
+  Music.request('');
   const cfg = CONFIG.intro;
-  if (!CONFIG.features.intro || (!cfg.showEveryVisit && storageGet(cfg.storageKey))) { onFinish(); return; }
+  const alreadySeen = !ignoreSeen && !cfg.showEveryVisit && storageGet(cfg.storageKey);
+  if (!CONFIG.features.intro || alreadySeen) { onFinish(); return; }
   const intro = $('#intro'), video = $('#intro-video');
+  introRunning = true;
+  setScrollLock(true);
+  // A replay starts on a dirty screen: the last run may have been skipped mid-fade.
+  intro.querySelectorAll('.is-visible').forEach((el) => el.classList.remove('is-visible'));
+  intro.classList.remove('is-leaving');
   const timers = []; let finished = false;
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const show = (sel) => $(sel).classList.add('is-visible');
   const hide = (sel) => $(sel).classList.remove('is-visible');
 
-  function finish() {                          // safe to call many times
+  function finish() {                          // safe to call many times, cause i'm tuff like that
     if (finished) return;
     finished = true;
     timers.forEach(clearTimeout);
     video.pause();
-    intro.hidden = true;
     storageSet(cfg.storageKey, '1');
-    onFinish();
+    intro.classList.add('is-leaving');         // the fade only works on a visible element, so hide it after, not before
+    onFinish();                                // start the site now: it is already there when the black lifts, couruntined
+    // Scroll stays locked and replays stay blocked until the fade is done.
+    setTimeout(() => { intro.hidden = true; introRunning = false; setScrollLock(false); }, reduceMotion ? 0 : cfg.fadeOutMs);
   }
   function startAnimation() {
     if (!cfg.videoSrc) { finish(); return; }
-    Music.request(cfg.musicSrc);               // '' simply means no intro music
-    video.addEventListener('ended', finish);
-    video.addEventListener('error', finish);   // missing video: skip ahead
+    if (cfg.musicSrc) Music.getTrack(cfg.musicSrc).currentTime = 0;
+    Music.request(cfg.musicSrc);
+    video.onended = finish;                    // assigned, not added, so a replay does not stack old handlers
+    video.onerror = finish;                    // missing video: skip ahead
     video.src = cfg.videoSrc;
     video.classList.add('is-visible');
     video.play().catch(finish);
@@ -640,12 +825,132 @@ function runIntro(onFinish) {
   later(() => show('#intro-logo'), t2);    later(() => hide('#intro-logo'), t2 + cfg.logoMs);
   later(startAnimation, t3);
   later(finish, t3 + cfg.maxDurationMs);       // safety net: never wait forever
-  $('#intro-skip').addEventListener('click', finish);
+  $('#intro-skip').onclick = finish;
 }
 
-// ===== 10. START =====
+// Debug: replay the first-visit intro, like groundhog day, without clearing localStorage by hand, cause I'm just pro like that.
+// Ctrl/Cmd/Alt combos are ignored on purpose; cause Ctrl+Shift+I already belongs to DevTools (I need that too)
+function setupDebugKeys(afterIntro) {
+  if (!CONFIG.debug.enabled) return;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== CONFIG.debug.replayIntroKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest('input, textarea, select, [contenteditable]')) return;
+    if (introRunning) return;                  // a second press mid-intro would start a second intro, so don't do that-
+    window.scrollTo(0, 0);
+    runIntro(afterIntro, { ignoreSeen: true });
+  });
+}
+
+//Draggable Cassette
+
+function setupPlayerDrag() {
+  const player = $('#mini-player'), handle = $('#mini-art');
+  const KEY = 'genres-player-corner';
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  const view = () => document.documentElement;
+  const saved = storageGet(KEY);
+  player.dataset.corner = ['tl', 'tr', 'bl', 'br'].includes(saved) ? saved : 'bl';
+  handle.classList.add('is-draggable');
+  let start = null;
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (start || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    start = { x: e.clientX, y: e.clientY, box: player.getBoundingClientRect() };
+    handle.setPointerCapture(e.pointerId);
+    player.style.transition = 'none';
+    player.classList.add('is-dragging');
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!start) return;
+    const dx = clamp(e.clientX - start.x, -start.box.left, view().clientWidth - start.box.right);
+    const dy = clamp(e.clientY - start.y, -start.box.top, view().clientHeight - start.box.bottom);
+    player.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+  });
+
+  const drop = () => {
+    if (!start) return;
+    start = null;
+    player.classList.remove('is-dragging');
+    const from = player.getBoundingClientRect();
+    const corner = (from.top + from.height / 2 < view().clientHeight / 2 ? 't' : 'b')
+                 + (from.left + from.width / 2 < view().clientWidth / 2 ? 'l' : 'r');
+    player.style.transform = 'none';
+    player.dataset.corner = corner;
+    const to = player.getBoundingClientRect();
+    player.style.transform = `translate3d(${from.left - to.left}px, ${from.top - to.top}px, 0)`;
+    void player.offsetWidth;
+    player.style.transition = 'transform 350ms cubic-bezier(.2, .9, .3, 1.15)';
+    player.style.transform = 'translate3d(0, 0, 0)';
+    storageSet(KEY, corner);
+  };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((type) => handle.addEventListener(type, drop));
+}
+
+const TouchTrail = {
+  start() {
+    if (!CONFIG.features.touchTrail || reduceMotion || !window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+    const COUNT = 12, FOLLOW = 0.35, FADE_MS = 300;
+    const dots = [];
+    let target = { x: 0, y: 0 }, touching = false, alpha = 0, running = false, last = 0;
+    for (let i = 0; i < COUNT; i++) {
+      const el = document.createElement('div');
+      el.className = 'trail-dot';
+      document.body.appendChild(el);
+      dots.push({ el, x: 0, y: 0 });
+    }
+    const frame = (now) => {
+      const dt = Math.min(now - last, 50);
+      last = now;
+      const ease = 1 - Math.pow(1 - FOLLOW, dt / 16.7);
+      alpha = touching ? 1 : Math.max(0, alpha - dt / FADE_MS);
+      dots.forEach((dot, i) => {
+        const lead = i === 0 ? target : dots[i - 1];
+        dot.x += (lead.x - dot.x) * ease;
+        dot.y += (lead.y - dot.y) * ease;
+        const size = 1 - i / COUNT;
+        dot.el.style.opacity = alpha * size;
+        dot.el.style.transform = `translate3d(${dot.x}px, ${dot.y}px, 0) translate(-50%, -50%) scale(${size})`;
+      });
+      if (touching || alpha > 0) requestAnimationFrame(frame); else running = false;
+    };
+    const wake = () => { if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } };
+    window.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      target = { x: t.clientX, y: t.clientY };
+      dots.forEach((d) => { d.x = target.x; d.y = target.y; });
+      touching = true;
+      wake();
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      if (t) target = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+    ['touchend', 'touchcancel'].forEach((type) => window.addEventListener(type, (e) => {
+      if (!e.touches.length) touching = false;
+    }, { passive: true }));
+  }
+};
+
+function setupPromo() {
+  const size = CONFIG.keychainSize;
+  const chip = $('#size-toggle'), demo = $('.keychain-demo'), w = $('.dim-w'), h = $('.dim-h');
+  let inches = false;
+  const fmt = (cm) => (inches ? (cm / 2.54).toFixed(2) : cm);
+  const paint = () => {
+    const unit = inches ? 'in' : 'cm';
+    chip.textContent = `${fmt(size.widthCm)} × ${fmt(size.heightCm)} ${unit}`;
+    w.textContent = `${fmt(size.widthCm)} ${unit}`;
+    h.textContent = `${fmt(size.heightCm)} ${unit}`;
+  };
+  demo.style.setProperty('--kc-ratio', size.widthCm / size.heightCm);
+  chip.addEventListener('click', () => { inches = !inches; paint(); });
+  paint();
+}
+
+// actual compilation, genuiene hell HAHHAHAHAHAHHA
 function start() {
-  // Feature switches that are pure CSS hooks
+  // features switches that are pure CSS hooks - IGNOREEEEEE
   if (CONFIG.features.productHover) document.body.classList.add('hover-on');
   if (!CONFIG.features.music) $('.mini-controls').hidden = true;
 
@@ -656,28 +961,38 @@ function start() {
   $('#order-form-link').href = CONFIG.orderFormUrl.replace('?embedded=true', '');
 
   renderProducts();
+  renderPrices();
+  setupPromo();
   const root = document.documentElement.style;            // intro icon settings
   root.setProperty('--intro-icon-size', CONFIG.intro.iconSize);
   root.setProperty('--intro-gap', CONFIG.intro.iconGap);
+  root.setProperty('--intro-video-fit', CONFIG.intro.videoFit);
+  root.setProperty('--intro-fade-ms', CONFIG.intro.fadeOutMs + 'ms');
   const hero = CONFIG.images.hero, player = CONFIG.images.player;
   $('.cassette-wrap').innerHTML = artFrameHtml(hero.src, 'Animated cassette player', hero.ratio, hero.reels);
   $('#mini-art').innerHTML = artFrameHtml(player.src, '', player.ratio, player.reels);
   FocusTracker.start();
   renderMembers();
   CassettePhysics.start();
-  Visualizer.start();
+  //Visualizer.start(); highkey decoration HAHHAHAH, too lazy to https it, ik I could get a github repository but no that takes too much work, imma just leave code as a theory
   CustomCursor.start();
+  TouchTrail.start();
+  setupPlayerDrag();
   setupNotes();
 
   $('#btn-play').addEventListener('click', () => Music.resume());
   $('#btn-pause').addEventListener('click', () => Music.pause());
-  document.addEventListener('click', (e) => { if (e.target.closest('a, button')) Sfx.play(CONFIG.audio.clickSrc); });
+  document.addEventListener('mousedown', () => {
+      Sfx.play(CONFIG.audio.clickSrc, CONFIG.audio.clickVolume);
+  });
 
   // If the browser blocked autoplay, the first click/keypress retries the wanted track.
   ['pointerdown', 'keydown'].forEach((type) => window.addEventListener(type, () => {
-    if (Music.blocked && !Music.userPaused) { Music.blocked = false; Music.crossfadeTo(Music.wantedSrc); }
+    if (Music.blocked && !Music.userPaused && !introRunning) { Music.blocked = false; Music.crossfadeTo(Music.wantedSrc); }
   }, { passive: true }));
 
-  runIntro(() => { siteReady = true; showPage(location.hash.slice(1)); });
+  const afterIntro = () => { siteReady = true; showPage(location.hash.slice(1)); };
+  runIntro(afterIntro);
+  setupDebugKeys(afterIntro);
 }
 start();
